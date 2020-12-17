@@ -107,7 +107,7 @@ def make_cuda_ext(name, module, sources):
         sources=[os.path.join(*module.split('.'), p) for p in sources],
         define_macros=define_macros,
         extra_compile_args={
-            'cxx': [],
+            'cxx': ["-DMS_WIN64", "-MD"],
             'nvcc': [
                 '-D__CUDA_NO_HALF_OPERATORS__',
                 '-D__CUDA_NO_HALF_CONVERSIONS__',
