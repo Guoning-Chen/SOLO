@@ -20,8 +20,9 @@ except ImportError:
 
 
 def main():
+    project_path = 'C:/Users/chengn/Documents/Projects/SOLO'
     sets = ['train2017','val2017','test2017']
-    output_dir = './annotations'
+    output_dir = os.path.join(project_path, 'data/coco/annotations')
     if osp.exists(output_dir):
         print('Output directory already exists:', output_dir)
         shutil.rmtree(output_dir)

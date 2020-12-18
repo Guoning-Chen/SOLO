@@ -15,7 +15,7 @@ for image_set in sets:
     os.makedirs(json_path)
     image_ids = open('./%s.txt'%(image_set)).read().strip().split()
     for image_id in image_ids:
-        img = 'images/%s.jpg' % (image_id)
+        img = 'images/%s.bmp' % (image_id)
         json = 'labelme/total2017/%s.json'% (image_id)
         shutil.copy(img,image_set)
         shutil.copy(json,'labelme/%s/'% (image_set))
