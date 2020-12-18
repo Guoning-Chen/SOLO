@@ -106,7 +106,9 @@ venv.bak/
 # cython generated cpp
 mmdet/ops/nms/src/soft_nms_cpu.cpp
 mmdet/version.py
-data
+data/coco/annotations
+data/coco/images
+data/coco/labelme
 .vscode
 .idea
 
