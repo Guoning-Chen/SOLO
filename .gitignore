@@ -121,5 +121,5 @@ work_dirs/
 *.pth
 
 # data
-data/coco/*
-!*.py
+data/*
+![*.py]

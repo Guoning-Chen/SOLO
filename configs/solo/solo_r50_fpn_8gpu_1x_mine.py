@@ -17,7 +17,7 @@ model = dict(
         num_outs=5),
     bbox_head=dict(
         type='SOLOHead',
-        num_classes=3,
+        num_classes=3,  # 实例的类别数
         in_channels=256,
         stacked_convs=7,
         seg_feat_channels=256,
@@ -50,7 +50,7 @@ test_cfg = dict(
     max_per_img=100)
 # dataset settings
 dataset_type = 'WearInstanceDataset'
-data_root = 'data/coco/'
+data_root = 'data/wear/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -79,7 +79,7 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    imgs_per_gpu=2,
+    imgs_per_gpu=1,  # batch
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
@@ -106,10 +106,10 @@ lr_config = dict(
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
     step=[9, 11])
-checkpoint_config = dict(interval=1)
+checkpoint_config = dict(interval=1)  # 每隔几个epoch保存一次模型
 # yapf:disable
 log_config = dict(
-    interval=50,
+    interval=50,  # 每迭代多少次输出一次日志
     hooks=[
         dict(type='TextLoggerHook'),
         # dict(type='TensorboardLoggerHook')
@@ -119,8 +119,8 @@ log_config = dict(
 total_epochs = 12
 device_ids = range(8)
 dist_params = dict(backend='nccl')
-log_level = 'INFO'
+log_level = 'INFO'  # 输出日志的类型
 work_dir = './work_dirs/solo_release_r50_fpn_8gpu_1x_mine'
-load_from = None
-resume_from = None
+load_from = None  # 加载预训练模型的路径
+resume_from = None  # 恢复到预训练模型上次结束时的状态
 workflow = [('train', 1)]

@@ -7,6 +7,6 @@ from mmdet.datasets.coco import CocoDataset
 
 
 @DATASETS.register_module
-class WearInstanceDataset(CocoDataset):
+class WearInstanceDataset(CocoDataset):  # 继承自CocoDataset（继承自CustomDataset）
 
     CLASSES = ('chain', 'oil', 'fiber')
