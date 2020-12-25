@@ -236,11 +236,11 @@ def show_result_ins(img,
     if not result or result == [None]:
         return img_show
     cur_result = result[0]
-    seg_label = cur_result[0]
+    seg_label = cur_result[0]  # Tensor1
     seg_label = seg_label.cpu().numpy().astype(np.uint8)
-    cate_label = cur_result[1]
+    cate_label = cur_result[1]  # Tensor2
     cate_label = cate_label.cpu().numpy()
-    score = cur_result[2].cpu().numpy()
+    score = cur_result[2].cpu().numpy()  # Tensor3
 
     vis_inds = score > score_thr
     seg_label = seg_label[vis_inds]
@@ -264,7 +264,7 @@ def show_result_ins(img,
     color_masks = [
         np.random.randint(0, 256, (1, 3), dtype=np.uint8)
         for _ in range(num_mask)
-    ]
+    ]  # 随机生成所有mask的颜色（RGB值）
     for idx in range(num_mask):
         idx = -(idx+1)
         cur_mask = seg_label[idx, :, :]
@@ -272,15 +272,15 @@ def show_result_ins(img,
         cur_mask = (cur_mask > 0.5).astype(np.uint8)
         if cur_mask.sum() == 0:
             continue
-        color_mask = color_masks[idx]
+        color_mask = color_masks[idx]  # 当前 mask的颜色
         cur_mask_bool = cur_mask.astype(np.bool)
-        img_show[cur_mask_bool] = img[cur_mask_bool] * 0.5 + color_mask * 0.5
+        img_show[cur_mask_bool] = img[cur_mask_bool] * 0.5 + color_mask * 0.5  # 向原图添加 mask
 
-        cur_cate = cate_label[idx]
-        cur_score = cate_score[idx]
-        label_text = class_names[cur_cate]
+        cur_cate = cate_label[idx]  # 当前mask所属的类别序号
+        cur_score = cate_score[idx]  # 当前mask的得分
+        label_text = class_names[cur_cate]  # 类别名
         #label_text += '|{:.02f}'.format(cur_score)
-        center_y, center_x = ndimage.measurements.center_of_mass(cur_mask)
+        center_y, center_x = ndimage.measurements.center_of_mass(cur_mask)  # 获取mask的中心，用于显示类别名
         vis_pos = (max(int(center_x) - 10, 0), int(center_y))
         cv2.putText(img_show, label_text, vis_pos,
                         cv2.FONT_HERSHEY_COMPLEX, 0.3, (255, 255, 255))  # green

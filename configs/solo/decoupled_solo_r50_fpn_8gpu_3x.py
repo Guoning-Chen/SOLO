@@ -57,7 +57,7 @@ train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
     dict(type='Resize',
-         img_scale=[(1200, 900)],  # [(1200, 900)] [(768, 576)]
+         img_scale=[(768, 576)],  # [(1200, 900)] [(768, 576)]
          # img_scale=[(1333, 800), (1333, 768), (1333, 736),
          #            (1333, 704), (1333, 672), (1333, 640)],
          multiscale_mode='value',
@@ -72,7 +72,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(768, 576),
+        img_scale=(768, 576),  # (768, 576) (1200, 900)
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -84,7 +84,7 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    imgs_per_gpu=1,
+    imgs_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
@@ -102,7 +102,7 @@ data = dict(
         img_prefix=data_root + 'JPEGImages/',
         pipeline=test_pipeline))
 # optimizer
-optimizer = dict(type='SGD', lr=3E-3, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=2E-3, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(
@@ -121,7 +121,7 @@ log_config = dict(
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 50
+total_epochs = 36
 device_ids = range(8)
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
