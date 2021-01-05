@@ -22,9 +22,11 @@ def post_treatment(img_path, result, class_names, score_thr=0.3):
     """
     assert isinstance(class_names, (tuple, list))
     img = mmcv.imread(img_path)
+    label = img_path.split('-')[-2][1]
     h, w, _ = img.shape
     img_info = {}
     img_info['img'] = img_path
+    img_info['label'] = label
     cur_result = result[0]
     if cur_result is None:  # 没有检测到实例
         img_info['num'] = 0
@@ -80,30 +82,35 @@ if __name__ == '__main__':
     model = init_detector(config_file, checkpoint_file, device='cuda:0')
 
     # 保存一批图像的结果
-    json_prefix = 'D:/temp/results'
-    img_prefix = 'D:/Dataset/Wear/XinYang/instance_segment/data/test/2'
-    all_img_files = glob.glob(os.path.join(img_prefix, '*.bmp'))
-    fjson = open(os.path.join(json_prefix, 'train_details.json'), 'w')
-    # dst_prefix = 'D:/temp/trained/%s/result' % checkpoint_name
+    json_prefix = 'D:/temp/results'  # 'D:/temp/results'
+    img_prefix = 'D:/Dataset/Wear/XinYang/instance_segment/data/train'
+    all_img_files = glob.glob(os.path.join(img_prefix, '*/*.bmp'))
+    if json_prefix is not None:
+        fjson = open(os.path.join(json_prefix, 'train340.json'), 'w')
+    else:
+        fjson = None
+    dst_prefix = 'D:/temp/results/train340'
     num_img = len(all_img_files)
     state = {}
     state['num'] = float(num_img)
     content = []
     for i in tqdm(range(num_img)):
         img_file = all_img_files[i]
+        img_name = img_file.split('/')[-1]
         result = inference_detector(model, img_file)
-        # dst_path = os.path.join(dst_prefix, img)
-        # show_result_ins(img_path, result, model.CLASSES, score_thr=0.25,
-        #                 out_file=dst_path)
+        dst_path = os.path.join(dst_prefix, img_name)
+        show_result_ins(img_file, result, model.CLASSES, score_thr=0.25,
+                        out_file=dst_path)
         # 分析mask信息
         info_dict = post_treatment(img_file, result, model.CLASSES,
                                    score_thr=0.25)
-        print(info_dict)
+        # print(info_dict)
         content.append(info_dict)
     # 保存到json文件
-    state['content'] = content
-    json.dump(state, fjson, indent=4)
-    fjson.close()
+    if fjson is not None:
+        state['content'] = content
+        json.dump(state, fjson, indent=4)
+        fjson.close()
 
 
 

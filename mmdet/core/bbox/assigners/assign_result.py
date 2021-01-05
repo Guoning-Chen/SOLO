@@ -109,7 +109,7 @@ class AssignResult(util_mixins.NiceRepr):
         Example:
             >>> from mmdet.core.bbox.assigners.assign_result import *  # NOQA
             >>> self = AssignResult.random()
-            >>> print(self.info)
+            >>> print(self.infos)
         """
         from mmdet.core.bbox import demodata
         rng = demodata.ensure_rng(kwargs.get('rng', None))
