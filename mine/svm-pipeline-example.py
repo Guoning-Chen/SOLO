@@ -9,6 +9,7 @@ import numpy as np
 
 
 if __name__ == "__main__":
+    # 读取特征
     json_path = 'D:/temp/results/train340.json'
     state = json.load(open(json_path))
     features = []
@@ -27,7 +28,7 @@ if __name__ == "__main__":
     np_x, np_y = np.asarray(features), np.asarray(labels)
     con = np.concatenate((np_x, np_y.reshape((np_y.shape[0], 1))), axis=1)
     print(con)
-    # create a pipeline object
+    # 创建pipeline对象
     pipe = make_pipeline(StandardScaler(),   # 特征缩放（归一化）
                          LogisticRegression())
     # load the iris dataset and split it into train and test sets
@@ -36,9 +37,9 @@ if __name__ == "__main__":
     # X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
     X_train, X_test, y_train, y_test = train_test_split(np_x, np_y, random_state=0)
     print("训练样本：%d, 测试样本：%d" % (X_train.shape[0], X_test.shape[0]))
-    # fit the whole pipeline
+    # 训练
     pipe.fit(X_train, y_train)
-    # we can now use it like any other estimator
+    # 测试
     predictions = pipe.predict(X_test)
     print("prediction: \n", predictions)
     confusion = np.zeros((4, 4))  # 混淆矩阵

@@ -82,14 +82,15 @@ if __name__ == '__main__':
     model = init_detector(config_file, checkpoint_file, device='cuda:0')
 
     # 保存一批图像的结果
-    json_prefix = 'D:/temp/results'  # 'D:/temp/results'
-    img_prefix = 'D:/Dataset/Wear/XinYang/instance_segment/data/train'
-    all_img_files = glob.glob(os.path.join(img_prefix, '*/*.bmp'))
+    json_prefix = None  # 'D:/temp/results'
+    src_folder = 'D:/Dataset/Wear/XinYang/ALL/Batch2/all_img'
+    dst_folder = 'D:/temp/results/batch2_segment'
+    # all_img_files = glob.glob(os.path.join(src_folder, '*/*.bmp'))
+    all_img_files = glob.glob(os.path.join(src_folder, '*.*'))
     if json_prefix is not None:
-        fjson = open(os.path.join(json_prefix, 'train340.json'), 'w')
+        fjson = open(os.path.join(json_prefix, 'batch2.json'), 'w')
     else:
         fjson = None
-    dst_prefix = 'D:/temp/results/train340'
     num_img = len(all_img_files)
     state = {}
     state['num'] = float(num_img)
@@ -98,14 +99,15 @@ if __name__ == '__main__':
         img_file = all_img_files[i]
         img_name = img_file.split('/')[-1]
         result = inference_detector(model, img_file)
-        dst_path = os.path.join(dst_prefix, img_name)
+        dst_path = os.path.join(dst_folder, img_name)
         show_result_ins(img_file, result, model.CLASSES, score_thr=0.25,
                         out_file=dst_path)
-        # 分析mask信息
-        info_dict = post_treatment(img_file, result, model.CLASSES,
-                                   score_thr=0.25)
-        # print(info_dict)
-        content.append(info_dict)
+        if json_prefix is not None:
+            # 分析mask信息
+            info_dict = post_treatment(img_file, result, model.CLASSES,
+                                       score_thr=0.25)
+            # print(info_dict)
+            content.append(info_dict)
     # 保存到json文件
     if fjson is not None:
         state['content'] = content
