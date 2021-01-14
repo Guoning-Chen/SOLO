@@ -7,9 +7,11 @@ import numpy as np
 import json
 import glob
 
+from mine.LR import read_json, lr_infer
+
 
 def post_treatment(img_path, result, class_names, score_thr=0.3):
-    """统计实例分割结果中所有mask的面积（像素数）。
+    """分别统计实例分割结果中每个mask的面积（像素数）。
 
     Args:
         img_path (str): 图像的路径
@@ -71,48 +73,57 @@ def post_treatment(img_path, result, class_names, score_thr=0.3):
     return img_info
 
 
-if __name__ == '__main__':
-    checkpoint_name = 'epoch-36_loss-0.1216_768x576'
+def solo_infer(solo_cp_path, src_folder, dst_folder, json_path):
     config_file = '../configs/solo/decoupled_solo_r50_fpn_8gpu_3x.py'
-    # download the checkpoint from model zoo and put it in `checkpoints/`
-    checkpoint_file = 'D:/temp/trained/%s/epoch_36.pth' % checkpoint_name
 
-    # build the model from a config file and a checkpoint file
-    # mmdet.models.detectors.solo.SOLO
-    model = init_detector(config_file, checkpoint_file, device='cuda:0')
+    # 加载solo模型
+    model = init_detector(config_file, solo_cp_path, device='cuda:0')
 
-    # 保存一批图像的结果
-    json_prefix = None  # 'D:/temp/results'
-    src_folder = 'D:/Dataset/Wear/XinYang/ALL/Batch2/all_img'
-    dst_folder = 'D:/temp/results/batch2_segment'
-    # all_img_files = glob.glob(os.path.join(src_folder, '*/*.bmp'))
-    all_img_files = glob.glob(os.path.join(src_folder, '*.*'))
-    if json_prefix is not None:
-        fjson = open(os.path.join(json_prefix, 'batch2.json'), 'w')
-    else:
-        fjson = None
-    num_img = len(all_img_files)
-    state = {}
-    state['num'] = float(num_img)
-    content = []
+    # 创建json文件
+    fjson = open(json_path, 'w')
+    # 读取所有输入图像的路径
+    all_img_paths = glob.glob(os.path.join(src_folder, '*.*'))
+    num_img = len(all_img_paths)
+    # 开始处理
+    state = {'num': float(num_img)}
+    content = []  # 所有图像的信息
     for i in tqdm(range(num_img)):
-        img_file = all_img_files[i]
-        img_name = img_file.split('/')[-1]
-        result = inference_detector(model, img_file)
-        dst_path = os.path.join(dst_folder, img_name)
-        show_result_ins(img_file, result, model.CLASSES, score_thr=0.25,
-                        out_file=dst_path)
-        if json_prefix is not None:
-            # 分析mask信息
-            info_dict = post_treatment(img_file, result, model.CLASSES,
-                                       score_thr=0.25)
-            # print(info_dict)
-            content.append(info_dict)
+        img_path = all_img_paths[i]
+        img_name = img_path.split('/')[-1]
+        result = inference_detector(model, img_path)  # 单张图像通过solo
+        dst_path = os.path.join(dst_folder, img_name)  # 以相同图像名称保存
+        show_result_ins(img_path, result, model.CLASSES, score_thr=0.25,
+                        out_file=dst_path)  # 绘制 mask并保存
+        # 分析mask信息
+        img_info = post_treatment(img_path, result, model.CLASSES,
+                                  score_thr=0.25)
+        # print(img_info)
+        content.append(img_info)
     # 保存到json文件
-    if fjson is not None:
-        state['content'] = content
-        json.dump(state, fjson, indent=4)
-        fjson.close()
+    state['content'] = content
+    json.dump(state, fjson, indent=4)
+    fjson.close()
+
+
+def two_tage_infer(solo_cp_path, lr_cp_path, src_folder, dst_folder, json_path):
+    solo_infer(solo_cp_path, src_folder, dst_folder, json_path)
+    test_acc = lr_infer(lr_cp_path)
+    print("总体准确率：", test_acc)
+
+
+if __name__ == '__main__':
+    work_folder = 'epoch-36_loss-0.1216_768x576'
+    solo_model_path = 'D:/temp/trained/%s/epoch_36.pth' % work_folder
+    lr_path = 'D:/temp/svm-7209.pipe'
+    src = 'D:/Dataset/Wear/XinYang/ALL/Batch2/all_img'
+    segment_result_folder = 'D:/temp/results/batch2_segment'
+    json_path = 'D:/temp/results/batch2.json'
+
+    two_tage_infer(solo_cp_path=solo_model_path,
+                   lr_cp_path=lr_path,
+                   src_folder=src,
+                   dst_folder=segment_result_folder,
+                   json_path=json_path)
 
 
 
