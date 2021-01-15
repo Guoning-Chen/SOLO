@@ -26,7 +26,7 @@ def post_treatment(img_path, result, class_names, score_thr=0.3):
     """
     assert isinstance(class_names, (tuple, list))
     img = mmcv.imread(img_path)
-    label = img_path.split('-')[-2][1]
+    label = img_path.split('\\')[1]
     h, w, _ = img.shape
     img_info = {}
     img_info['img'] = img_path
@@ -64,42 +64,15 @@ def post_treatment(img_path, result, class_names, score_thr=0.3):
         # 浓度（所占图像的比例，单位：%）
         density_ratio = density / total_area * 100
         # 周长
-        contours, hierarchy = cv2.findContours(
-            image=cur_mask,
-            mode=cv2.RETR_EXTERNAL,
-            method=cv2.CHAIN_APPROX_SIMPLE)
-        if len(contours) > 1:  # 一个mask中有多个封闭区域（一个对象被分成几部分）
-            print(img_path)
-            plt.imshow(cur_mask)
-            plt.imsave()
-            print(len(contours))
-        area_list = []
-        # for cnt in contours:
-        #     area1 = cv2.contourArea(cnt)
-        #     # area_list.append(area)
-        #     print('area1:', area1)
-        #     perimeter = cv2.arcLength(cnt, True)
-        #     print('perimeter:', perimeter)
-        #     rect = cv2.minAreaRect(cnt)
-        #     # print(rect)
-        #     area = rect[1][0] * rect[1][1]
-        #     print('area:', area)
-        #     area_list.append(area)
-        #     if area1 < 200:
-        #         continue
-        #     box = cv2.boxPoints(rect)
-        #     box = np.int0(box)
-        #     round_level = 4 * 3.14 * area1 / (perimeter ** 2)
-        #     # print(box)
-        #     # if round_level < 0.5 and max(rect[1][0], rect[1][1]) > 50:
-        #     #     # cv2.drawContours(image1,[box],0,(0,0,255),2)
-        #     #     cv2.drawContours(image, [box], 0, (0, 0, 255), 2)
-        #     # elif round_level >= 0.5:
-        #     #     # cv2.drawContours(image1, [box], 0, (0, 0, 255), 2)
-        #     #     cv2.drawContours(image, [box], 0, (0, 255, 0), 2)
-        #     # elif round_level < 0.5 and max(rect[1][0], rect[1][1]) < 50:
-        #     #     cv2.drawContours(image, [box], 0, (255, 0, 0), 2)
-        # area_list.sort()
+        # contours, hierarchy = cv2.findContours(
+        #     image=cur_mask,
+        #     mode=cv2.RETR_EXTERNAL,
+        #     method=cv2.CHAIN_APPROX_SIMPLE)
+        # if len(contours) > 1:  # 一个mask中有多个封闭区域（一个对象被分成几部分）
+        #     print(img_path)
+        #     plt.imshow(cur_mask)
+        #     plt.imsave()
+        #     print(len(contours))
 
         mask_info.append({
             'label': mask_label,
@@ -132,6 +105,9 @@ def solo_infer(solo_cp_path, src_folder, dst_folder, json_path):
     for i in tqdm(range(num_img)):
         img_path = all_img_paths[i]
         img_name = img_path.split('/')[-1]
+        if cv2.imread(img_path) is None:
+            print(img_path)
+            continue
         result = inference_detector(model, img_path)  # 单张图像通过solo
         dst_path = os.path.join(dst_folder, img_name)  # 以相同图像名称保存
         show_result_ins(img_path, result, model.CLASSES, score_thr=0.25,
@@ -153,14 +129,25 @@ def two_tage_infer(solo_cp_path, lr_cp_path, src_folder, dst_folder, json_path):
     print("总体准确率：", test_acc)
 
 
+def check_img_path():
+    """检查src文件夹下是否有图像的文件名错误（无法读取），如果有则输出"""
+    src = 'D:/Dataset/Wear/XinYang/ALL/Batch2/12img/split/molilian100/split'
+    all_img_paths = glob.glob(os.path.join(src, '*/*.*'))
+    num_img = len(all_img_paths)
+    for i in tqdm(range(num_img)):
+        img_path = all_img_paths[i]
+        if cv2.imread(img_path) is None:
+            print(img_path)
+
+
 if __name__ == '__main__':
     # 联合测试
     work_folder = 'epoch-36_loss-0.1216_768x576'
     solo_model_path = 'D:/temp/trained/%s/epoch_36.pth' % work_folder
     lr_path = 'D:/temp/svm-7209.pipe'
-    src = 'D:/Dataset/Wear/XinYang/instance_segment/data/test'
-    segment_result_folder = 'D:/temp/results/batch2_segment'
-    json_path = 'D:/temp/results/test_segment.json'
+    src = 'D:/Dataset/Wear/XinYang/ALL/Batch2/12img/split/molilian100/split'
+    segment_result_folder = 'D:/temp/results/test_batch2'
+    json_path = 'D:/temp/results/test_batch2.json'
 
     two_tage_infer(solo_cp_path=solo_model_path,
                    lr_cp_path=lr_path,
