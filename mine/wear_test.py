@@ -6,8 +6,10 @@ from tqdm import tqdm
 import numpy as np
 import json
 import glob
+import cv2
+import matplotlib.pyplot as plt
 
-from mine.LR import read_json, lr_infer
+from mine.LR import lr_infer
 
 
 def post_treatment(img_path, result, class_names, score_thr=0.3):
@@ -55,15 +57,55 @@ def post_treatment(img_path, result, class_names, score_thr=0.3):
         # 面积
         cur_mask = seg_label[idx, :, :]
         cur_mask = mmcv.imresize(cur_mask, (w, h))
-        cur_mask = (cur_mask > 0.5).astype(np.int32)
+        # cur_mask = (cur_mask > 0.5).astype(np.int32)
         density = cur_mask.sum()
+        # plt.imshow(cur_mask)
+        # plt.show()
         # 浓度（所占图像的比例，单位：%）
         density_ratio = density / total_area * 100
+        # 周长
+        contours, hierarchy = cv2.findContours(
+            image=cur_mask,
+            mode=cv2.RETR_EXTERNAL,
+            method=cv2.CHAIN_APPROX_SIMPLE)
+        if len(contours) > 1:  # 一个mask中有多个封闭区域（一个对象被分成几部分）
+            print(img_path)
+            plt.imshow(cur_mask)
+            plt.imsave()
+            print(len(contours))
+        area_list = []
+        # for cnt in contours:
+        #     area1 = cv2.contourArea(cnt)
+        #     # area_list.append(area)
+        #     print('area1:', area1)
+        #     perimeter = cv2.arcLength(cnt, True)
+        #     print('perimeter:', perimeter)
+        #     rect = cv2.minAreaRect(cnt)
+        #     # print(rect)
+        #     area = rect[1][0] * rect[1][1]
+        #     print('area:', area)
+        #     area_list.append(area)
+        #     if area1 < 200:
+        #         continue
+        #     box = cv2.boxPoints(rect)
+        #     box = np.int0(box)
+        #     round_level = 4 * 3.14 * area1 / (perimeter ** 2)
+        #     # print(box)
+        #     # if round_level < 0.5 and max(rect[1][0], rect[1][1]) > 50:
+        #     #     # cv2.drawContours(image1,[box],0,(0,0,255),2)
+        #     #     cv2.drawContours(image, [box], 0, (0, 0, 255), 2)
+        #     # elif round_level >= 0.5:
+        #     #     # cv2.drawContours(image1, [box], 0, (0, 0, 255), 2)
+        #     #     cv2.drawContours(image, [box], 0, (0, 255, 0), 2)
+        #     # elif round_level < 0.5 and max(rect[1][0], rect[1][1]) < 50:
+        #     #     cv2.drawContours(image, [box], 0, (255, 0, 0), 2)
+        # area_list.sort()
 
         mask_info.append({
             'label': mask_label,
             'density': float(density),
-            'ratio': density_ratio})
+            'ratio': density_ratio,
+            'perimeter': None})
     # 将mask按面积（density）降序排列
     mask_density = [mask['density'] for mask in mask_info]
     orders = np.argsort([-d for d in mask_density])  # 加负号是为了降序，默认是升序
@@ -82,7 +124,7 @@ def solo_infer(solo_cp_path, src_folder, dst_folder, json_path):
     # 创建json文件
     fjson = open(json_path, 'w')
     # 读取所有输入图像的路径
-    all_img_paths = glob.glob(os.path.join(src_folder, '*.*'))
+    all_img_paths = glob.glob(os.path.join(src_folder, '*/*.*'))
     num_img = len(all_img_paths)
     # 开始处理
     state = {'num': float(num_img)}
@@ -107,23 +149,25 @@ def solo_infer(solo_cp_path, src_folder, dst_folder, json_path):
 
 def two_tage_infer(solo_cp_path, lr_cp_path, src_folder, dst_folder, json_path):
     solo_infer(solo_cp_path, src_folder, dst_folder, json_path)
-    test_acc = lr_infer(lr_cp_path)
+    test_acc = lr_infer(lr_cp_path, json_path)
     print("总体准确率：", test_acc)
 
 
 if __name__ == '__main__':
+    # 联合测试
     work_folder = 'epoch-36_loss-0.1216_768x576'
     solo_model_path = 'D:/temp/trained/%s/epoch_36.pth' % work_folder
     lr_path = 'D:/temp/svm-7209.pipe'
-    src = 'D:/Dataset/Wear/XinYang/ALL/Batch2/all_img'
+    src = 'D:/Dataset/Wear/XinYang/instance_segment/data/test'
     segment_result_folder = 'D:/temp/results/batch2_segment'
-    json_path = 'D:/temp/results/batch2.json'
+    json_path = 'D:/temp/results/test_segment.json'
 
     two_tage_infer(solo_cp_path=solo_model_path,
                    lr_cp_path=lr_path,
                    src_folder=src,
                    dst_folder=segment_result_folder,
                    json_path=json_path)
+
 
 
 
