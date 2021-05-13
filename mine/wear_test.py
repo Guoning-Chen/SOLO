@@ -131,7 +131,7 @@ def two_tage_infer(solo_cp_path, lr_cp_path, src_folder, dst_folder, json_path):
 
 def check_img_path():
     """检查src文件夹下是否有图像的文件名错误（无法读取），如果有则输出"""
-    src = 'D:/Dataset/Wear/XinYang/ALL/Batch2/12img/split/molilian100/split'
+    src = 'D:/Dataset/Wear/XinYang/ALL/Batch2/12img/split/molilian100/split/test'
     all_img_paths = glob.glob(os.path.join(src, '*/*.*'))
     num_img = len(all_img_paths)
     for i in tqdm(range(num_img)):
@@ -145,7 +145,7 @@ if __name__ == '__main__':
     work_folder = 'epoch-36_loss-0.1216_768x576'
     solo_model_path = 'D:/temp/trained/%s/epoch_36.pth' % work_folder
     lr_path = 'D:/temp/svm-7209.pipe'
-    src = 'D:/Dataset/Wear/XinYang/ALL/Batch2/12img/split/molilian100/split'
+    src = 'D:/Dataset/Wear/XinYang/ALL/Batch2/12img/split/molilian100/split/test'
     segment_result_folder = 'D:/temp/results/test_batch2'
     json_path = 'D:/temp/results/test_batch2.json'
 
